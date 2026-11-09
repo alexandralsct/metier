@@ -195,19 +195,55 @@ var Metier = (function () {
     if (b.supposee) return 'Relever les heures réelles d\'une vraie mission de « ' + p.nom + ' » (les heures du calcul sont supposées).';
     return 'Demander un devis ou une offre réelle pour « ' + p.nom + ' » et comparer au chiffre relevé.';
   }
-  /* pistes : fiches fusionnées ; filtre : 'tout' | 'independante' | 'salariee' | 'porteurs' ; renvoie { classees, sansChiffre } */
-  function classementPrincipal(pistes, g, marge, filtre) {
+  /* Critères du panel (écran Classement) : crit = { distance:'tous'|'pasSurPlace'|'partielle'|'sourcee', euroMin, delaiMax, famille:'toutes'|id } pour FILTRER ;
+     { marge, plafond, vise } (saisis dans le Cahier des charges, jamais préremplis) pour ORDONNER : une piste qui ne les respecte pas passe après les autres
+     (jamais retirée). Un fait inconnu ne fait jamais écarter une piste. Sans critère : classement par €/h seul. */
+  function delaiAcces(p) {
+    var a = nombre((p.droitEntree || {}).mois), b = nombre(p.moisSansRevenu);
+    return a === null ? b : (b === null ? a : Math.max(a, b));
+  }
+  function familleDe(p) { return p.famille || p.groupe || ''; }
+  function distanceOk(p, mode) {
+    var d = p.distance, sourcee = (p.supposes || []).indexOf('distance') < 0, ok = d === 'totale' || d === 'principale';
+    if (mode === 'sourcee') return ok && sourcee;
+    if (mode === 'partielle') return (ok || d === 'partielle') && sourcee;
+    if (mode === 'pasSurPlace') return d !== 'surplace';
+    return true;
+  }
+  function horsCahier(l, g, crit) {
+    var p = l.piste, out = [], pl = nombre(crit.plafond), vi = nombre(crit.vise), hv = heuresVisibles(p, g), rev = revenuAnnuel(p, g, 'bas');
+    if (entreeAuDela(p, crit.marge)) out.push('au-delà de ta marge');
+    if (pl !== null && hv !== null && hv > pl) out.push('au-dessus de ton plafond d\'heures');
+    if (vi !== null && rev && rev.apresCharges < vi) out.push('sous ton revenu visé');
+    return out;
+  }
+  function critOk(l, crit) {
+    var p = l.piste, m = nombre(crit.euroMin), dl = nombre(crit.delaiMax), d = delaiAcces(p);
+    if (m !== null && !(l.base && l.base.valeur >= m)) return false;     // €/h inconnu : impossible de dire qu'il atteint le minimum
+    if (dl !== null && d !== null && d > dl) return false;
+    if (crit.famille && crit.famille !== 'toutes' && familleDe(p) !== crit.famille) return false;
+    return distanceOk(p, crit.distance);
+  }
+  /* pistes : fiches fusionnées ; filtre : 'tout' | 'independante' | 'salariee' | 'porteurs' | 'panel' (toutes les pistes ; les critères s'appliquent) ; renvoie { classees, sansChiffre, delaiInconnu } */
+  function classementPrincipal(pistes, g, marge, filtre, crit) {
     var f = filtre || 'tout', lignes = [];
     (pistes || []).forEach(function (p, i) {
       if (p.statut === 'elimine') return;
       var b = baseHoraire(p, g), profil = profilEmploi(p, b);
       if (f === 'porteurs') { if (!p.porteur) return; }
-      else if (f !== 'tout' && profil !== 'inconnu' && profil !== f) return;
-      lignes.push({ piste: p, base: b, profil: profil, mentions: mentionsPiste(p, marge), ordre: i });
+      else if (f !== 'tout' && f !== 'panel' && profil !== 'inconnu' && profil !== f) return;
+      lignes.push({ piste: p, base: b, profil: profil, mentions: mentionsPiste(p, marge), ordre: i, hors: [] });
     });
+    crit = crit || {};
+    if (f === 'panel') lignes = lignes.filter(function (l) { return critOk(l, crit); });
+    var delaiInconnu = f === 'panel' && nombre(crit.delaiMax) !== null ? lignes.filter(function (l) { return delaiAcces(l.piste) === null; }).length : 0;
     var ch = lignes.filter(function (l) { return l.base; }).sort(function (a, b) { return b.base.valeur - a.base.valeur || a.ordre - b.ordre; });
+    if (f === 'panel') {
+      ch.forEach(function (l) { l.hors = horsCahier(l, g, crit); });
+      ch = ch.filter(function (l) { return !l.hors.length; }).concat(ch.filter(function (l) { return l.hors.length; }));
+    }
     ch.forEach(function (l, k) { l.rang = k + 1; });
-    return { classees: ch, sansChiffre: lignes.filter(function (l) { return !l.base; }) };
+    return { classees: ch, sansChiffre: lignes.filter(function (l) { return !l.base; }), delaiInconnu: delaiInconnu };
   }
 
   /* ---------- Grille de critères refaite (I46, I89) : poids à toi, critères inconnus laissés de côté ---------- */

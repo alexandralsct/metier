@@ -143,6 +143,9 @@ svg text { font-family: var(--mono); font-size: 10px; fill: var(--encre-2); }
 .retour { justify-self: start; }
 .plus-liste { display: grid; gap: var(--e-2); grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 .plus-liste button { text-align: left; }
+/* panel de filtres : sélecteurs et champs jamais plus larges que l'écran */
+.panel .grille { grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); }
+.panel select, .panel input { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
 @media (min-width: 600px) { .filtres .onglet { flex: 0 0 auto; min-width: 130px; } }
 @media (min-width: 900px) { .pistes-liste { gap: var(--e-3); } .piste-ligne { padding: var(--e-3) var(--e-5); } }
 

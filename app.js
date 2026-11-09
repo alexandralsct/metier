@@ -16,7 +16,8 @@
   }
   var ui = { ecran: 'classement', sous: { pistes: 'fiches', tests: 'tests', recolte: 'relire' }, ouvrir: null, carteIdx: 0, carnetPiste: null, filtre: 'tous',
     recolte: { etat: 'propose', famille: 'toutes', max: 40, message: '' },
-    filtreClassement: 'tout', nbVisibles: 10, detail: null };
+    filtreClassement: 'tout', nbVisibles: 10, detail: null,
+    panel: { distance: 'tous', euroMin: '', delaiMax: '', famille: 'toutes' } };   // filtres du panel : de la session seulement, jamais enregistrés
   /* L'app s'ouvre toujours sur le classement (aucun écran retenu entre deux visites). */
 
   /* ================= petits outils ================= */
@@ -1077,24 +1078,28 @@
     return h('span', { class: 'piste-mentions' }, mentions.map(function (m) { return puce(m.texte, m.ton); }));
   }
   function ligneClassement(l) {
+    var ment = l.hors && l.hors.length ? l.hors.map(function (t) { return { texte: t, ton: 'non' }; }).concat(l.mentions) : l.mentions;
     return h('li', null, h('button', { class: 'piste-ligne', type: 'button', 'data-piste': l.piste.id, onclick: function () { ui.detail = l.piste.id; aller('detail'); } },
       h('span', { class: 'piste-rang' }, l.rang ? String(l.rang) : '·'),
       h('span', { class: 'piste-nom' }, l.piste.nom),
       l.base ? chiffreHoraire(l.base) : h('span', { class: 'piste-chiffre' }, h('small', null, 'sans chiffre')),
-      mentionsPuces(l.mentions.slice(0, 2))));      // deux mentions au plus par ligne ; le détail dit le reste
+      mentionsPuces(ment.slice(0, 2))));      // deux mentions au plus par ligne ; le détail dit le reste
   }
   function ecranClassement(racine) {
     var g = reglages(), m = marge();
     var barre = h('div', { class: 'filtres', role: 'group', 'aria-label': 'Filtre' },
-      [['tout', 'Tout'], ['independante', 'Indépendante'], ['salariee', 'Salariée'], ['porteurs', 'Porteurs']].map(function (f) {
+      [['tout', 'Tout'], ['independante', 'Indépendante'], ['salariee', 'Salariée'], ['porteurs', 'Porteurs'], ['panel', 'Métiers à distance']].map(function (f) {
         return h('button', { class: 'onglet', type: 'button', 'data-filtre': f[0], 'aria-pressed': ui.filtreClassement === f[0] ? 'true' : 'false', 'aria-selected': ui.filtreClassement === f[0] ? 'true' : 'false',
           onclick: function () { ui.filtreClassement = f[0]; ui.nbVisibles = 10; afficher(true); } }, f[1]);
       }));
-    var r = M.classementPrincipal(pistes(), g, m, ui.filtreClassement);
+    var c = etat.cahier, crit = { distance: ui.panel.distance, euroMin: ui.panel.euroMin, delaiMax: ui.panel.delaiMax, famille: ui.panel.famille,
+      marge: m, plafond: c.plafondHeures, vise: c.revenuVise };
+    var r = M.classementPrincipal(pistes(), g, m, ui.filtreClassement, crit);
     var liste = h('ol', { class: 'pistes-liste', 'data-idee': 'I84 I87' }, r.classees.slice(0, ui.nbVisibles).map(ligneClassement));
     var reste = r.classees.length - ui.nbVisibles;
     racine.appendChild(h('div', { class: 'cartes' },
       barre,
+      ui.filtreClassement === 'panel' ? panelFiltres(crit, r) : null,
       ui.filtreClassement === 'porteurs' ? note('Métiers « porteurs » : une prévision n\'est pas une certitude. Ouvre une piste pour sa source.') : null,
       note('Euros par heure, avec la nature du chiffre : brut ou facturé HT.'),
       h('details', null, h('summary', null, 'Comment lire ce chiffre'),
@@ -1104,6 +1109,32 @@
       r.sansChiffre.length ? h('details', { 'data-idee': 'I87' }, h('summary', null, 'Sans chiffre pour l\'instant (' + r.sansChiffre.length + ')'),
         h('div', { class: 'cartes' }, note('Rien n\'est estimé pour ces pistes : un fait inconnu reste vide.'), h('ol', { class: 'pistes-liste' }, r.sansChiffre.map(ligneClassement)))) : null,
       prochaineAction(r)));
+  }
+  /* Panel filtrable : les filtres sont à elle (session), l'ordre suit ce qu'elle a SAISI au Cahier des charges (marge, plafond d'heures, revenu visé) ; rien n'est prérempli */
+  function panelFiltres(crit, r) {
+    var P = ui.panel, c = etat.cahier;
+    function sel(label, cle, options) {
+      return h('label', null, label, h('select', { 'data-panel': cle, onchange: function (e) { P[cle] = e.target.value; ui.nbVisibles = 10; afficher(true); } },
+        options.map(function (o) { return h('option', { value: o[0], selected: P[cle] === o[0] }, o[1]); })));
+    }
+    function nombreChamp(label, cle) {
+      return h('label', null, label, h('input', { type: 'number', min: '0', inputmode: 'decimal', 'data-panel': cle, value: P[cle], onchange: function (e) { P[cle] = e.target.value; ui.nbVisibles = 10; afficher(true); } }));
+    }
+    var familles = Object.keys(MetierPorteurs.FAMILLES_PANEL).map(function (k) { return [k, MetierPorteurs.FAMILLES_PANEL[k]]; })
+      .concat(Object.keys(D.GROUPES).filter(function (k) { return k !== 'distance'; }).map(function (k) { return [k, D.GROUPES[k]]; }));
+    var saisis = [['revenu', 'revenu'], ['heures', 'heures'], ['lieu', 'lieu']].filter(function (x) { return String(c[x[0]] || '').trim(); })
+      .map(function (x) { return x[1] + ' « ' + String(c[x[0]]).trim() + ' »'; });
+    var aOrdre = [crit.marge, crit.plafond, crit.vise].some(function (v) { return M.nombre(v) !== null; });
+    return h('section', { class: 'bloc panel', 'data-panel-filtres': 'oui' }, h('h2', null, 'Filtrer les métiers'),
+      h('div', { class: 'grille' },
+        sel('Part à distance', 'distance', [['tous', 'Toutes'], ['pasSurPlace', 'Pas « sur place » (inconnue comprise)'], ['partielle', 'Au moins en partie, source à l\'appui'], ['sourcee', 'Totale ou principale, source à l\'appui']]),
+        nombreChamp('Revenu minimum (€ par heure)', 'euroMin'),
+        nombreChamp('Délai d\'accès maximum (mois)', 'delaiMax'),
+        sel('Famille', 'famille', [['toutes', 'Toutes les familles']].concat(familles))),
+      note(aOrdre ? 'Ordre : euros par heure ; ce qui dépasse ta marge, ton plafond d\'heures ou ton revenu visé (Cahier des charges) passe après, avec la mention.' : 'Ordre : euros par heure seulement. Saisis ta marge, ton plafond d\'heures ou ton revenu visé dans le Cahier des charges pour qu\'ils comptent.'),
+      saisis.length ? note('Tes critères en texte libre (non lus par le classement) : ' + saisis.join(' · ') + '.') : null,
+      r.delaiInconnu ? note(r.delaiInconnu + ' piste(s) sans délai d\'accès connu restent affichées : un fait inconnu n\'écarte rien.') : null,
+      M.nombre(crit.euroMin) !== null ? note('Une piste sans chiffre en euros par heure ne peut pas atteindre un minimum : elle n\'est pas listée.') : null);
   }
   function prochaineAction(r) {
     var l = r.classees[0] || r.sansChiffre[0];
@@ -1148,7 +1179,7 @@
           el.appendChild(h('h3', null, 'Prochaine vérification'));
           el.appendChild(h('p', null, M.prochaineVerification(piste(p.id), reglages(), marge())));
         }, { class: 'cartes' }),
-        p.porteur ? blocPorteur(p.porteur) : null,
+        (p.porteur || p.panel) ? blocPorteur(p.porteur || p.panel) : null,
         h('details', { 'data-idee': 'I25 I37 I38 I46 I53 I89' }, h('summary', null, 'Tout le reste de la fiche (carnet, patron, hypothèse, examens)'),
           ficheComplete(piste(p.id))))));
   }

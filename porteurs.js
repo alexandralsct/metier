@@ -40,16 +40,26 @@ var MetierPorteurs = (function () {
   }
   function complete(f) { return manques(f).length === 0; }
 
+  /* Familles du panel (étape 1 : les fiches pt-F1…F50 sont rangées par dizaines ; 5 familles) — une classification de l'app, pas un fait sourcé */
+  var FAMILLES_PANEL = { design: 'Design et produit', gestion: 'Gestion de projet et conseil', data: 'Data et tech', vente: 'Vente', redaction: 'Rédaction et formation' };
+  function familleDuPanel(id) {
+    var n = +String(id).replace(/^pt-F/, '');
+    return n >= 1 && n <= 10 ? 'design' : n <= 20 ? 'gestion' : n <= 30 ? 'data' : n <= 40 ? 'vente' : n <= 50 ? 'redaction' : '';
+  }
+
   /* installation : la fiche porteuse s'attache à une fiche existante (même métier) ou devient une nouvelle piste */
-  var installe = false;
-  function installer(D, donnees, existants) {
-    if (installe) return;
-    installe = true;
+  var installes = [];
+  /* opts (panel de métiers à distance) : { groupe, panel:true } → la fiche va dans p.panel (pas p.porteur : le filtre « Porteurs » reste aux 50 fiches de l'enquête) */
+  function installer(D, donnees, existants, opts) {
+    if (installes.indexOf(donnees) >= 0) return;
+    installes.push(donnees);
+    opts = opts || {};
     (donnees || []).forEach(function (f) {
       var cible = existants && existants[f.id] ? D.PISTES.filter(function (p) { return p.id === existants[f.id]; })[0] : null;
       if (cible) { cible.porteur = f; return; }
       var p = D.nouvelle(f.id, f.nom);
-      p.idee = 'Porteur'; p.groupe = 'porteur'; p.resume = f.quoi || ''; p.rome = f.rome || '';
+      p.idee = opts.panel ? 'Panel' : 'Porteur'; p.groupe = opts.groupe || 'porteur';
+      if (opts.panel) p.famille = familleDuPanel(f.id); p.resume = f.quoi || ''; p.rome = f.rome || '';
       p.sources = sourcesDe(f);
       /* plusieurs sources pour un même profil : on garde la plus basse (prudence) */
       function annuel(r) { return r.unite === 'euros_brut_mensuel' ? r.bas * 12 : r.bas; }
@@ -72,7 +82,7 @@ var MetierPorteurs = (function () {
       if (nb(f.delai_premier_revenu_mois) !== null) { p.moisSansRevenu = f.delai_premier_revenu_mois; p.supposes.push('moisSansRevenu'); }
       p.manque = (f.manque || []).join(' ; ');
       p.faitsInconnus = f.faits_introuvables || [];
-      p.porteur = f;
+      if (opts.panel) p.panel = f; else p.porteur = f;
       D.PISTES.push(p);
     });
   }
@@ -93,8 +103,12 @@ var MetierPorteurs = (function () {
   if (typeof MetierDonnees !== 'undefined' && typeof MetierPorteursDonnees !== 'undefined') {
     MetierDonnees.GROUPES.porteur = 'Métiers porteurs';
     installer(MetierDonnees, MetierPorteursDonnees.fiches, MetierPorteursDonnees.existants);
+    if (typeof MetierPorteursPanel !== 'undefined') {
+      MetierDonnees.GROUPES.distance = 'Métiers à distance';
+      installer(MetierDonnees, MetierPorteursPanel.fiches, MetierPorteursPanel.existants, { groupe: 'distance', panel: true });
+    }
   }
 
-  return { PORTEES: PORTEES, NATURES_CROISSANCE: NATURES_CROISSANCE, RISQUES_IA: RISQUES_IA, PROFILS: PROFILS, UNITES: UNITES, manques: manques, complete: complete, installer: installer, sourcesDe: sourcesDe };
+  return { PORTEES: PORTEES, NATURES_CROISSANCE: NATURES_CROISSANCE, RISQUES_IA: RISQUES_IA, PROFILS: PROFILS, UNITES: UNITES, FAMILLES_PANEL: FAMILLES_PANEL, manques: manques, complete: complete, installer: installer, sourcesDe: sourcesDe };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = MetierPorteurs;

@@ -6,25 +6,26 @@
 // Ce fichier change dès qu'un fichier change (empreintes) : le navigateur installe alors la nouvelle version, d'un bloc.
 // Seules les réponses de CE dossier sont gardées, et seulement à l'installation : une réponse de l'API GitHub ou du serveur (autres hôtes) n'est jamais interceptée ni mise en cache.
 // Recalcul : python3 scripts/metier_empreintes.py (vérifié par tests/test_metier_autonome.py).
-const CACHE = 'metier2-v1-2532738f1087';
-const COQUILLE = ['./', 'index.html', 'app.css', 'connexion.css', 'app.js', 'logique.js', 'connexion.js', 'synchro.js', 'qr.js', 'donnees.js', 'enquete.js', 'porteurs.js', 'porteurs_donnees.js', 'installation.js',
+const CACHE = 'metier2-v1-d69bcc1bc838';
+const COQUILLE = ['./', 'index.html', 'app.css', 'connexion.css', 'app.js', 'logique.js', 'connexion.js', 'synchro.js', 'qr.js', 'donnees.js', 'enquete.js', 'porteurs.js', 'porteurs_donnees.js', 'porteurs_donnees_panel.js', 'installation.js',
   'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png',
   'fonts/instrument-sans.woff2', 'fonts/plex-mono-400.woff2', 'fonts/plex-mono-400-italique.woff2', 'fonts/plex-mono-500.woff2',
   'fonts/plex-mono-600.woff2', 'fonts/plex-mono-700.woff2', 'fonts/OFL-InstrumentSans.txt', 'fonts/OFL-IBMPlexMono.txt'];
 // EMPREINTES:début
 const EMPREINTES = {
-  'index.html': 'ba57cb779567118bc8378a22dd53fbcf15a7079f4b24d8e45553bc7292ae3d25',
-  'app.css': 'cdc578ddb407607a01f798026a9825ec5ce0fedba86cd33fe010f5e4c111200d',
+  'index.html': '3f0e43cd70d1c83e17c9589eb8c867d72791df0f771086befd999c730a0790ae',
+  'app.css': '2f5339310b11a50fcdae561f1da1eaa0fcf5651b5e5733f887cc6a22e5ca2c72',
   'connexion.css': '01bf86c5c909a65f76fd2a55214ead405d8ce57ff1d2d394ab7eac950c8819ce',
-  'app.js': '32b888e0adbddfb2ea9869c3e7de397e93e035ced5491a1c988e8f303271db60',
-  'logique.js': '6fe6286c7dcfec357c870e19b557c3e10cb587ab75910626c7414073c17e638c',
+  'app.js': 'ec1a01d39c434f283a6464bb4b958f54de176eef562a02068c69f1ca12758e5b',
+  'logique.js': 'e65e3777bb36c0bf8e6c790f87a4c7e071c463de0017878ff2ce6896fefeb232',
   'connexion.js': 'c25c5a9ca19236108606957edfcf7049d7c95327873f6b9f06ed4e0664e28b5d',
   'synchro.js': '84d8b7571322db44fd89ec94c85425f9c396299d20648001d7b53ac2724c1ed4',
   'qr.js': '14685aab1677fc1e530c7e761a28bd842ede7a18fcd3e804b3e7037ca0fb0444',
   'donnees.js': '477c85acec4ea7b09b632d898263db79d103b4bde2d43f826d5f3f804923b1c9',
   'enquete.js': '35849771b85284cf244eca5a5642e7a74f1c7eaf7d8751167f08c0dc156c71df',
-  'porteurs.js': '6cafca448f57660716848c358363c794ecca0b1bfba4cd679f45591bfca78b74',
+  'porteurs.js': '88d1a581a0495bee1d8ff9b08a2ef3d0a0921d23577ba04bf75250042a549777',
   'porteurs_donnees.js': '8d5f339ca5de255bc5b05a8cca17853fa6b9a612b7c9133ad32028d33a06514e',
+  'porteurs_donnees_panel.js': '9a96ab39c7484106907f9454e531ef127e3bfc42bddce5eabd1b55168aabe493',
   'installation.js': '7b65f755117edb9e9f9325766e21b4ec13b111502b49acc130b8e63d2c4d024d',
   'manifest.webmanifest': '116fbd523138c1d8f139aaa97c330b042ad2b75459c0bc1d78da38caefadfac6',
   'icon.svg': 'f0030ee2d83ed001e32b9e1761a811e5510aae83df32c9afadac7c5129695fa8',
