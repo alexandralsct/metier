@@ -6,7 +6,7 @@
 // Ce fichier change dès qu'un fichier change (empreintes) : le navigateur installe alors la nouvelle version, d'un bloc.
 // Seules les réponses de CE dossier sont gardées, et seulement à l'installation : une réponse de l'API GitHub ou du serveur (autres hôtes) n'est jamais interceptée ni mise en cache.
 // Recalcul : python3 scripts/metier_empreintes.py (vérifié par tests/test_metier_autonome.py).
-const CACHE = 'metier2-v1-0d6d1e7b773e';
+const CACHE = 'metier2-v1-2532738f1087';
 const COQUILLE = ['./', 'index.html', 'app.css', 'connexion.css', 'app.js', 'logique.js', 'connexion.js', 'synchro.js', 'qr.js', 'donnees.js', 'enquete.js', 'porteurs.js', 'porteurs_donnees.js', 'installation.js',
   'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png',
   'fonts/instrument-sans.woff2', 'fonts/plex-mono-400.woff2', 'fonts/plex-mono-400-italique.woff2', 'fonts/plex-mono-500.woff2',
@@ -27,10 +27,10 @@ const EMPREINTES = {
   'porteurs_donnees.js': '8d5f339ca5de255bc5b05a8cca17853fa6b9a612b7c9133ad32028d33a06514e',
   'installation.js': '7b65f755117edb9e9f9325766e21b4ec13b111502b49acc130b8e63d2c4d024d',
   'manifest.webmanifest': '116fbd523138c1d8f139aaa97c330b042ad2b75459c0bc1d78da38caefadfac6',
-  'icon.svg': '14366397b9eedd7119e0ab4b96aeddd333f86ed56d67f28a08d34f1177a92db2',
-  'icon-192.png': 'cb5500aae3ac01bdf9b10c5a3177367d947b83f21aab25539fd177af893a253a',
-  'icon-512.png': '964fc9088bfc65830535983f9afd712848edfe1d032cc77fdd2a0c3b716f9128',
-  'icon-maskable-512.png': 'e47afe0f8a22f31ae0eb00ccdc3b93fa500908da4ca1fa882e4d05bf403a779a',
+  'icon.svg': 'f0030ee2d83ed001e32b9e1761a811e5510aae83df32c9afadac7c5129695fa8',
+  'icon-192.png': '81e3aa5337980b808d3128956838a6d3aa5a270cf2b29426f3bcaaff8d65beae',
+  'icon-512.png': '7b07196052894621354f2724a59693f33b63b903f034dd5db9b7862694d66a81',
+  'icon-maskable-512.png': 'baf6a7f9be7e50226656b3cbec6863a0a68fa90992037be23eb6ee4027d9c297',
   'fonts/instrument-sans.woff2': '6219bc4bfdfc5d9b2201dcdf046218b122a758f932e25ed5f168f929b7ca2311',
   'fonts/plex-mono-400.woff2': 'c36f509c0a8f9f85f29cb44bc8701d8a9e0b14c499e77a884f789ead7093a7ac',
   'fonts/plex-mono-400-italique.woff2': '2665f5fbbb334780fa135c7f1dc6e2459061a2d6d44c32b7c1fdbc34cde65ede',
